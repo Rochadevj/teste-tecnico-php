@@ -1,0 +1,17 @@
+{
+    "name": "brudam/teste-php-junior",
+    "description": "Starter kit — Teste Técnico PHP Júnior",
+    "type": "project",
+    "require": {
+        "php": ">=8.1",
+        "robmorgan/phinx": "^0.16"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true
+    }
+}
