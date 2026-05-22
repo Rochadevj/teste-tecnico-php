@@ -140,7 +140,7 @@ class EntregaController
     public static function show(array $params): void
     {
         $db  = Database::connection();
-        $ref = $params['id'];
+        $ref = $params['id'] ?? $params['codigo'];
 
         // Aceita ID numérico ou código BRD-
         if (str_starts_with(strtoupper($ref), 'BRD-')) {
