@@ -5,6 +5,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use App\Router;
 use App\Controllers\TransportadoraController;
 use App\Controllers\EntregaController;
+use App\Controllers\NaoConformidadeController;
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -34,5 +35,8 @@ $router->get('/entregas',               [EntregaController::class, 'index']);
 $router->post('/entregas',              [EntregaController::class, 'store']);
 $router->get('/entregas/{id}',          [EntregaController::class, 'show']);
 $router->patch('/entregas/{id}/status', [EntregaController::class, 'updateStatus']);
+
+// Não conformidades
+$router->get('/motivos-nao-conformidade', [NaoConformidadeController::class, 'motivos']);
 
 $router->dispatch();
