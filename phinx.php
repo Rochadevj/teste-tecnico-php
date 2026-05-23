@@ -2,6 +2,15 @@
 
 $envFile = __DIR__ . '/.env';
 $env     = file_exists($envFile) ? parse_ini_file($envFile) : [];
+$value   = static function (string $key, string $default) use ($env): string {
+    $value = $env[$key] ?? getenv($key);
+
+    if ($value === false || $value === '') {
+        return $default;
+    }
+
+    return (string) $value;
+};
 
 return [
     'paths' => [
@@ -13,11 +22,11 @@ return [
         'default_environment'     => 'development',
         'development' => [
             'adapter' => 'mysql',
-            'host'    => $env['DB_HOST'] ?? 'localhost',
-            'name'    => $env['DB_NAME'] ?? 'brudam_test',
-            'user'    => $env['DB_USER'] ?? 'root',
-            'pass'    => $env['DB_PASS'] ?? '',
-            'port'    => (int) ($env['DB_PORT'] ?? 3306),
+            'host'    => $value('DB_HOST', 'localhost'),
+            'name'    => $value('DB_NAME', 'brudam_test'),
+            'user'    => $value('DB_USER', 'root'),
+            'pass'    => $value('DB_PASS', ''),
+            'port'    => (int) $value('DB_PORT', '3306'),
             'charset' => 'utf8mb4',
         ],
     ],
