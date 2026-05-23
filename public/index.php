@@ -42,6 +42,7 @@ $router->get('/rastreamento/{codigo}', [EntregaController::class, 'show']);
 // Não conformidades
 $router->get('/motivos-nao-conformidade', [NaoConformidadeController::class, 'motivos']);
 
+$router->get('/entregas/{id}/nao-conformidades', [NaoConformidadeController::class, 'indexByEntrega']);
 $router->post('/entregas/{id}/nao-conformidades', [NaoConformidadeController::class, 'store']);
 
 $router->dispatch();

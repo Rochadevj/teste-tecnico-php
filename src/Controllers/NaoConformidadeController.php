@@ -89,4 +89,45 @@ class NaoConformidadeController
             'created_at' => $naoConformidade['created_at'],
         ], 201);
     }
+
+    public static function indexByEntrega(array $params): void
+    {
+        $db = Database::connection();
+
+        $stmt = $db->prepare('SELECT id, codigo FROM entregas WHERE id = ?');
+        $stmt->execute([$params['id']]);
+        $entrega = $stmt->fetch();
+
+        if (!$entrega) {
+            json(['erro' => 'Entrega não encontrada'], 404);
+        }
+
+        $stmt = $db->prepare('
+            SELECT nc.id, nc.descricao, nc.created_at,
+                   m.id AS motivo_id, m.codigo AS motivo_codigo, m.descricao AS motivo_descricao
+            FROM nao_conformidades nc
+            JOIN motivos_nao_conformidade m ON m.id = nc.id_motivo
+            WHERE nc.id_entrega = ?
+            ORDER BY nc.created_at ASC, nc.id ASC
+        ');
+        $stmt->execute([$params['id']]);
+        $rows = $stmt->fetchAll();
+
+        json([
+            'entrega' => [
+                'id'     => (int) $entrega['id'],
+                'codigo' => $entrega['codigo'],
+            ],
+            'nao_conformidades' => array_map(fn($r) => [
+                'id' => (int) $r['id'],
+                'motivo' => [
+                    'id'        => (int) $r['motivo_id'],
+                    'codigo'    => $r['motivo_codigo'],
+                    'descricao' => $r['motivo_descricao'],
+                ],
+                'descricao'  => $r['descricao'],
+                'created_at' => $r['created_at'],
+            ], $rows),
+        ]);
+    }
 }
