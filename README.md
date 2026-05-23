@@ -182,3 +182,105 @@ Se algo estiver ambíguo, documente sua interpretação e siga. Decisão sob inc
 ## Autor
 
 **Michel Mileski** — [@eusouomichel](https://github.com/eusouomichel)
+
+---
+
+## Implementação
+
+### Como rodar com Docker
+
+```bash
+docker compose up -d --build
+docker compose exec app vendor/bin/phinx migrate
+docker compose exec app vendor/bin/phinx seed:run
+```
+
+A API fica disponível em `http://localhost:8000`.
+
+O MySQL do Docker fica exposto em `localhost:3307`. Dentro do Docker, a aplicação usa o host `db` e a porta `3306`.
+
+### Endpoints adicionados
+
+```
+GET  /motivos-nao-conformidade
+POST /entregas/{id}/nao-conformidades
+GET  /entregas/{id}/nao-conformidades
+GET  /rastreamento/{codigo}
+```
+
+### Exemplos de requisição
+
+Listar motivos ativos de não conformidade:
+
+```bash
+curl "http://localhost:8000/motivos-nao-conformidade"
+```
+
+Registrar uma não conformidade em uma entrega:
+
+```bash
+curl -X POST "http://localhost:8000/entregas/1/nao-conformidades" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id_motivo": 1,
+    "descricao": "Produto com embalagem avariada"
+  }'
+```
+
+Listar não conformidades de uma entrega:
+
+```bash
+curl "http://localhost:8000/entregas/1/nao-conformidades"
+```
+
+Rastrear uma entrega pelo código:
+
+```bash
+curl "http://localhost:8000/rastreamento/BRD-2024-00001"
+```
+
+Validar o bloqueio de transportadora inativa:
+
+```bash
+curl -X POST "http://localhost:8000/entregas" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id_transportadora": 3,
+    "id_remetente": 1,
+    "id_destinatario": 1,
+    "data_prazo": "2026-05-30",
+    "peso_kg": 10.5,
+    "volumes": 2
+  }'
+```
+
+Resposta esperada:
+
+```json
+{
+  "erro": "Transportadora inativa"
+}
+```
+
+### Decisões
+
+- Mantive a estrutura original do projeto, usando PHP puro, controllers simples e PDO.
+- Usei o campo `deleted_at` para identificar transportadoras inativas, seguindo a regra que já existia no `TransportadoraController`.
+- A criação de entrega agora retorna `422` quando a transportadora existe, mas está inativa.
+- Criei a tabela `motivos_nao_conformidade` para manter os motivos separados dos registros de ocorrência.
+- Criei a tabela `nao_conformidades` vinculada por chave estrangeira à entrega e ao motivo.
+- O endpoint `GET /motivos-nao-conformidade` retorna apenas motivos com `ativo = 1`.
+- O endpoint `POST /entregas/{id}/nao-conformidades` valida campo obrigatório, entrega existente e motivo existente.
+- O endpoint `GET /rastreamento/{codigo}` reaproveita a busca de entrega por código já existente no `EntregaController`.
+- O Docker usa variáveis de ambiente definidas no `docker-compose.yml`; localmente o projeto continua funcionando com `.env`.
+
+### Validações realizadas
+
+- Criação de entrega com transportadora ativa.
+- Bloqueio de criação de entrega com transportadora inativa.
+- Listagem de motivos ativos.
+- Registro de não conformidade.
+- Listagem de não conformidades por entrega.
+- Rastreamento por código da entrega.
+- Retorno `404` para entrega inexistente.
+- Retorno `422` para `id_motivo` ausente.
